@@ -1,0 +1,98 @@
+create database Data_Cleaning_Project 
+use Data_Cleaning_Project 
+
+
+select * from housing_data
+
+-- standerdizing date format
+
+select saledate, convert(date,saledate) as New_sale_date from housing_data
+
+alter table Housing_data
+add New_sale_date date
+ 
+update Housing_data
+set New_sale_date= convert(date,saledate)
+
+
+-- Replacing Null Values with Understandable text
+
+select PropertyAddress, isnull(PropertyAddress,'No Address') as New_Property_Address from Housing_data 
+
+
+update housing_data
+set PropertyAddress =  isnull(PropertyAddress,'No Address')
+
+update housing_data
+set OwnerAddress =  isnull(OwnerAddress,'No Address')
+
+select * from housing_data
+
+
+-- Separating property address in different coulomn
+
+select PropertyAddress, substring(PropertyAddress,1,charindex(',',PropertyAddress)-1) )as kjfs from Housing_data
+
+select charindex(',',PropertyAddress,1)-1 from Housing_data ---- not working
+
+
+select parsename(replace(PropertyAddress,',','.'),2) as new_Property_Address,
+parsename(replace(PropertyAddress,',','.'),1) as new_City from Housing_data
+
+alter table Housing_data 
+add new_Property_Address varchar(255),new_City varchar(255)
+
+update Housing_data
+set new_Property_Address=parsename(replace(PropertyAddress,',','.'),2) , new_City=parsename(replace(PropertyAddress,',','.'),1)
+
+select * from Housing_data
+-- Separating owner address in different coulomn
+
+
+select parsename(replace(ownerAddress,',','.'),3),parsename(replace(ownerAddress,',','.'),2),parsename(replace(ownerAddress,',','.'),1)from Housing_Data
+ alter table Housing_data
+ add New_Owner_Address varchar(255),New_Owner_City varchar(255),New_Owner_stateCode varchar(255)
+
+ update Housing_data
+ set New_Owner_Address=parsename(replace(ownerAddress,',','.'),3),
+ New_Owner_City =parsename(replace(ownerAddress,',','.'),2),
+ New_Owner_stateCode=parsename(replace(ownerAddress,',','.'),1)
+
+ select distinct(soldasvacant) from Housing_data
+
+ -- Replacing null values in city column
+
+ update housing_data
+set New_Owner_City =  isnull(New_Owner_City,'No City'),New_Owner_Address=isnull(New_Owner_Address,'No Address')
+
+
+ -- replacing y with yes and n with no through case when
+
+update Housing_data
+ set soldasvacant = case when SoldAsvacant ='Y' then 'Yes'
+                         when SoldAsvacant ='N' then 'No' Else SoldAsvacant  end  from Housing_data
+
+--removing duplicates
+
+
+with cte as (select *, row_number() over (partition by parcelid,New_sale_date order by parcelid) row_num from housing_data)
+ delete from cte where row_num>1 
+
+-- delete unused column
+select * from Housing_data
+alter table Housing_data
+drop column PropertyAddress,SaleDate,OwnerAddress
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
