@@ -1,0 +1,53 @@
+use portfolio_project
+select * from CovidDeaths
+select * from CovidVaccinations
+
+1-- to show likelyhood of dying if you contract covid in your country
+
+select location, date, total_cases,total_deaths,concat(round(total_deaths/total_cases*100,2),'%') as likelyhood_of_dying from CovidDeaths
+where location= 'India' and continent is not null
+order by 5 desc
+
+2-- to show how much %age of total population is infected in your country
+
+select location , date, population, total_cases, concat(round(total_cases/population*100,2),'%') as Infection_rate from coviddeaths
+where location ='India' and continent = 'Asia'
+order by 5 desc 
+
+3-- to show highest infection rate compared to population by country
+
+select continent,location, population,max(total_cases) as maximum_cases,
+concat(round(max(total_cases/population)*100,2),'%') as highest_infection_rate from coviddeaths
+ where continent is not null   group by location, population, continent
+ order by 5 desc
+
+4-- to show countries with highest death count
+
+ select continent,location,population,max(total_deaths) as maximum_deaths ,concat(round(max(total_deaths/population)*100,2),'%') as highest_death_count from coviddeaths
+ where continent is not null group by continent,location,population
+ order by 5 desc
+
+5-- to show continent with highest death count
+select continent,sum(population) as total_population,sum(cast(total_deaths as int))as maximum_deaths,
+concat(round(sum(cast(total_deaths as int)) /sum(population)*100,2),'%') as highest_death_count from coviddeaths
+where continent is not null group by continent
+order by 4 desc
+
+6-- to show percentage of population that has received atleast one vaccine date by date
+
+with cte as ( select continent,location,population,date,new_vaccinations,
+sum(cast(new_vaccinations as int)) over(partition by location order by date, location) as
+total_vaccinations from coviddeaths where location= 'India' and continent='Asia')
+select *, concat(round(total_vaccinations/population*100,2),'%') as percent_of_people_vaccined from cte order by 7 desc
+
+7-- creating view for the same
+
+create view percentagepopulationvaccinateddatewise 
+as 
+with cte as ( select continent,location,population,date,new_vaccinations,
+sum(cast(new_vaccinations as int)) over(partition by location order by date, location) as
+total_vaccinations from coviddeaths where location= 'India' and continent='Asia')
+select *, concat(round(total_vaccinations/population*100,2),'%') as percent_of_people_vaccined from cte 
+
+select * from percentagepopulationvaccinateddatewise
+
